@@ -1,5 +1,8 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
+from dotenv import load_dotenv
+
+load_dotenv()
 
 FIRST_PERSON_PROMPT = ChatPromptTemplate.from_messages(
     [("system",
