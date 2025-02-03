@@ -43,9 +43,8 @@ def streamlit_interface():
             st.warning("No API Key was found for the chosen model!")
 
         st.markdown("### Choose the Summary Language.")
-        language_options = ["Original Language", "English", "Spanish", "French", "German", "Turkish"]
+        language_options = ["Original Language", "English", "Turkish","Spanish", "French", "German"]
         selected_language = st.selectbox("Select the output language:", language_options, index=0)
-        print(selected_language)
 
     if st.button("Summarize"):
         if not video_url or (video_url and not is_valid_youtube_url(video_url)):
