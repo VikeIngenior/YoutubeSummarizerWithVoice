@@ -13,7 +13,7 @@ def is_valid_youtube_url(url):
     return youtube_pattern.match(url)
 
 def streamlit_interface():
-    st.title("Youtube Summarizer")
+    st.title("Youtube Video Summarizer")
     st.markdown("""
         Type the URL and get the Summary!
     """)
@@ -41,6 +41,12 @@ def streamlit_interface():
         LLM = choose_model(selected_model)
         if LLM is None:
             st.warning("No API Key was found for the chosen model!")
+
+        st.markdown("### Choose the Summary Language.")
+        language_options = ["Original Language", "English", "Spanish", "French", "German", "Turkish"]
+        selected_language = st.selectbox("Select the output language:", language_options, index=0)
+        print(selected_language)
+
     if st.button("Summarize"):
         if not video_url or (video_url and not is_valid_youtube_url(video_url)):
             st.warning("Please enter a valid URL!")
@@ -49,7 +55,7 @@ def streamlit_interface():
                 docs = transcript_from_youtubeloader(video_url)
             if docs:
                 with st.spinner("Transcript is being summarized..."):
-                    summary = summarize_transcript(docs, summary_type, summary_length, LLM)
+                    summary = summarize_transcript(docs, summary_type, summary_length, LLM, selected_language)
                 if summary:
                     st.subheader("Video Summary")
                     st.write(summary)
