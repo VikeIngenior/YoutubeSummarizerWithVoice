@@ -10,7 +10,6 @@ def transcript_from_youtubeloader(url: str):
         language=['tr']
     )
     docs = loader.load()
-    print(docs[1])
     return docs
 
 def transcript_with_whisper():

@@ -1,11 +1,4 @@
-from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_anthropic import ChatAnthropic
-from choose_model import choose_model, get_available_models
-from dotenv import load_dotenv
-import streamlit as st
-
-load_dotenv()
 
 FIRST_PERSON_PROMPT = ChatPromptTemplate.from_messages(
     [("system",
