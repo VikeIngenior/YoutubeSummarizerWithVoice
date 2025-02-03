@@ -2,15 +2,12 @@ from langchain_core.prompts import ChatPromptTemplate
 
 FIRST_PERSON_PROMPT = ChatPromptTemplate.from_messages(
     [("system",
-      "Imagine you are the creator of the video, and you're summarizing its content. \
-      Please summarize it in your own words, \
-      keeping the important parts intact and highlighting the key moments, arguments, and essential ideas. \
-      The summary should provide a clear,\
-      concise overview of the video while retaining the main message and purpose of the video, \
-      as if you're explaining it to someone who hasn't watched it. \
-      Summarize the transcript in the preferred language indicated below. \
-      The summary should be {length} tenth long of the context. \
-      Below is the transcript of your video. \\n\\n{context}\\nPreferred Language: {language}")]
+      "You are the creator of this video, summarizing your own content. \
+      Write the summary as if you are personally explaining it to your audience. \
+      Use 'I' and 'my' to maintain a first-person perspective. \
+      Keep the important parts intact, highlight key moments, and ensure the summary retains the main message and purpose of the video. \
+      The summary must be written in the preferred language specified below and should be approximately {length} tenth of the original transcript. \
+      Below is your video’s transcript:\n\n{context}\n\nPreferred Language: {language}")]
 )
 
 THIRD_PERSON_PROMPT = ChatPromptTemplate.from_messages(

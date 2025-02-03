@@ -6,8 +6,7 @@ def transcript_from_youtubeloader(url: str):
         url,
         add_video_info=False,
         transcript_format=TranscriptFormat.CHUNKS,
-        chunk_size_seconds=15,
-        language=['tr']
+        chunk_size_seconds=15
     )
     docs = loader.load()
     return docs

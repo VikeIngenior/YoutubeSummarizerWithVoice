@@ -13,12 +13,12 @@ def summarize_transcript(docs: List, prompt_type:  str, length: str, llm, langua
 
     if llm is not None:
         try:
-            chain = create_stuff_documents_chain(llm, type_and_length[0][prompt_type])
+            chain = create_stuff_documents_chain(llm, type_and_length[0].get(prompt_type))
             result = chain.invoke({"context": docs, "length": type_and_length[1].get(length), "language": language})
 
             return result
         except Exception as e:
-            match = re.search(r"'message': '([^']*)'", str(e))  # 'message' içindeki değeri al
-            error_message = match.group(1) if match else "Unknown Error! (Probably the balance is too low for the API Key."
+            match = re.search(r"'message': '([^']*)'", str(e))
+            error_message = match.group(1) if match else "Unknown Error! (Probably the balance is too low for the API Key.)"
 
             st.error(error_message)
