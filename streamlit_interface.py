@@ -53,7 +53,18 @@ def streamlit_interface():
         selected_model = st.selectbox("Select a model for summarization:", model_options)
 
         LLM = choose_model(selected_model)
-        if LLM is None:
+
+        # Model Information
+        if LLM is not None:
+            model_mapping = {
+                "OpenAI GPT-4o": "GPT-4o Mini",
+                "Anthropic Claude": "Claude 3 Opus",
+                "Google Gemini": "Gemini 1.5 Pro"
+            }
+
+            selected_model_info = model_mapping.get(selected_model, "Unknown Model")
+            st.info(f"Using **{selected_model_info}** for summarization.")
+        else:
             st.warning("No API Key was found for the chosen model!")
 
         st.markdown("### Choose the Summary Language.")
