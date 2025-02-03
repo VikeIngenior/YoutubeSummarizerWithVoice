@@ -1,24 +1,37 @@
 import re
 from dotenv import load_dotenv
 from langchain.chains.combine_documents import create_stuff_documents_chain
+from typing_extensions import Optional
+
 from constants import FIRST_PERSON_PROMPT, THIRD_PERSON_PROMPT
 import streamlit as st
-from typing import List
+from typing import Optional, List
 load_dotenv()
 
-def summarize_transcript(docs: List, prompt_type:  str, length: str, llm, language: str):
+def summarize_transcript(docs: List, prompt_type:  str, length: str, llm, language: str) -> Optional[str]:
+    """
+    Summarizes the transcript using an LLM model.
 
-    type_and_length = [{"First-Person": FIRST_PERSON_PROMPT, "Third-Person": THIRD_PERSON_PROMPT},
-                       {"Short": 2, "Long": 7}]
+    Args:
+        docs (List): The transcript documents to be summarized.
+        prompt_type (str): Type of summary ('First-Person' or 'Third-Person').
+        length (str): Length of summary ('Short' or 'Long').
+        llm: The language model instance used for summarization.
+        language (str): Output language of the summary.
 
-    if llm is not None:
+    Returns:
+        Optional[str]: The summarized text if successful, otherwise None.
+    """
+    summary_type = {"First-Person": FIRST_PERSON_PROMPT, "Third-Person": THIRD_PERSON_PROMPT}
+    summary_length = {"Short": 2, "Long": 7}
+
+    if llm is not None: # If there is an API key for the selected model.
         try:
-            chain = create_stuff_documents_chain(llm, type_and_length[0].get(prompt_type))
-            result = chain.invoke({"context": docs, "length": type_and_length[1].get(length), "language": language})
-
+            chain = create_stuff_documents_chain(llm, summary_type.get(prompt_type))
+            result = chain.invoke({"context": docs, "length": summary_length.get(length), "language": language})
             return result
         except Exception as e:
             match = re.search(r"'message': '([^']*)'", str(e))
             error_message = match.group(1) if match else "Unknown Error! (Probably the balance is too low for the API Key.)"
-
             st.error(error_message)
+            return None
