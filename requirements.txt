@@ -4,3 +4,4 @@ youtube-transcript-api
 python-dotenv
 langchain-anthropic
 langchain-openai
+langchain-google-genai

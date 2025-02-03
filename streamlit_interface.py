@@ -4,6 +4,7 @@ from summarize import summarize_transcript
 from transcript import transcript_from_youtubeloader
 from voiceover import voiceover
 from choose_model import get_available_models, choose_model
+import constants
 
 docs = []
 
@@ -37,7 +38,7 @@ def streamlit_interface():
         st.markdown("### Choose a Model")
         model_options = list(get_available_models().keys())
         selected_model = st.selectbox("Select a model for summarization:", model_options)
-        choose_model(selected_model)
+        constants.LLM = choose_model(selected_model)
 
     if st.button("Summarize"):
         if not video_url or (video_url and not is_valid_youtube_url(video_url)):

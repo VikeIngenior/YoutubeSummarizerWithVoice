@@ -1,5 +1,6 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
+from choose_model import choose_model
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -28,4 +29,4 @@ THIRD_PERSON_PROMPT = ChatPromptTemplate.from_messages(
       Below is the transcript of the video. \\n\\n{context}")]
 )
 
-LLM = ChatOpenAI(model="gpt-4o-mini")
+LLM = None
