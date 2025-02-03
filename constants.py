@@ -1,8 +1,4 @@
-from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from dotenv import load_dotenv
-
-load_dotenv()
 
 FIRST_PERSON_PROMPT = ChatPromptTemplate.from_messages(
     [("system",
@@ -27,5 +23,3 @@ THIRD_PERSON_PROMPT = ChatPromptTemplate.from_messages(
       The summary should be {length} tenth long of the context. \
       Below is the transcript of the video. \\n\\n{context}")]
 )
-
-LLM = ChatOpenAI(model="gpt-4o-mini")

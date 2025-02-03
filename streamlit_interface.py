@@ -8,7 +8,7 @@ from choose_model import get_available_models, choose_model
 docs = []
 
 def is_valid_youtube_url(url):
-    # YouTube URL'sinin geçerliliğini kontrol etmek için regex kullanılır
+
     youtube_pattern = re.compile(r'(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/.+$')
     return youtube_pattern.match(url)
 
@@ -37,8 +37,10 @@ def streamlit_interface():
         st.markdown("### Choose a Model")
         model_options = list(get_available_models().keys())
         selected_model = st.selectbox("Select a model for summarization:", model_options)
-        choose_model(selected_model)
 
+        LLM = choose_model(selected_model)
+        if LLM is None:
+            st.warning("No API Key was found for the chosen model!")
     if st.button("Summarize"):
         if not video_url or (video_url and not is_valid_youtube_url(video_url)):
             st.warning("Please enter a valid URL!")
@@ -47,7 +49,7 @@ def streamlit_interface():
                 docs = transcript_from_youtubeloader(video_url)
             if docs:
                 with st.spinner("Transcript is being summarized..."):
-                    summary = summarize_transcript(docs, summary_type, summary_length)
+                    summary = summarize_transcript(docs, summary_type, summary_length, LLM)
                 if summary:
                     st.subheader("Video Summary")
                     st.write(summary)
