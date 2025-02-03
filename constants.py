@@ -8,8 +8,9 @@ FIRST_PERSON_PROMPT = ChatPromptTemplate.from_messages(
       The summary should provide a clear,\
       concise overview of the video while retaining the main message and purpose of the video, \
       as if you're explaining it to someone who hasn't watched it. \
-      Ensure the summary is in the same language as the transcript. \
-      Below is the transcript of your video. \\n\\n{context}")]
+      Summarize the transcript in the preferred language indicated below. \
+      The summary should be {length} tenth long of the context. \
+      Below is the transcript of your video. \\n\\n{context}\\nPreferred Language: {language}")]
 )
 
 THIRD_PERSON_PROMPT = ChatPromptTemplate.from_messages(
@@ -19,7 +20,7 @@ THIRD_PERSON_PROMPT = ChatPromptTemplate.from_messages(
       important details, and essential arguments discussed in the video. \
       Ensure that the summary preserves the core ideas and main takeaways without including unnecessary details. \
       Your summary should be easy to read and accurately reflect the content of the transcript.\
-      Ensure the summary is in the same language as the transcript. \
+      Summarize the transcript in the preferred language indicated below. \
       The summary should be {length} tenth long of the context. \
-      Below is the transcript of the video. \\n\\n{context}")]
+      Below is the transcript of the video. \\n\\n{context}\\nPreferred Language: {language}")]
 )
