@@ -1,7 +1,9 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from choose_model import choose_model
+from langchain_anthropic import ChatAnthropic
+from choose_model import choose_model, get_available_models
 from dotenv import load_dotenv
+import streamlit as st
 
 load_dotenv()
 
@@ -28,5 +30,3 @@ THIRD_PERSON_PROMPT = ChatPromptTemplate.from_messages(
       The summary should be {length} tenth long of the context. \
       Below is the transcript of the video. \\n\\n{context}")]
 )
-
-LLM = None
