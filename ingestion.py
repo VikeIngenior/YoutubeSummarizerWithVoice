@@ -1,5 +1,5 @@
 from langchain_openai import OpenAIEmbeddings
-from YoutubeSummarizerWithVoice.transcript import transcript_from_youtubeloader
+from transcript import transcript_from_youtubeloader
 from langchain_chroma import Chroma
 
 def initialize_vectorstore(video_url: str):
