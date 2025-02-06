@@ -1,10 +1,18 @@
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from sympy.physics.units import temperature
-
+from chromadb import PersistentClient
 from transcript import transcript_from_youtubeloader
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+import os
+
+def delete_previous_collection(collection_name: str):
+    try:
+        chroma_client = PersistentClient(path=".chroma")
+        chroma_client.delete_collection(collection_name)
+    except Exception as e:
+        raise Exception(f"Unable to delete collection: {e}")
 
 def initialize_vectorstore(video_url: str):
     """
@@ -17,16 +25,20 @@ def initialize_vectorstore(video_url: str):
             retriever: Chroma retriever instance.
         """
 
+    # Clean the previous collection
+    delete_previous_collection("video-rag")
+
     # Get transcript documents
     docs = transcript_from_youtubeloader(video_url)
 
     # Initialize vectorstore
-    vectorstore = Chroma.from_documents(
-        documents=docs,
+    vectorstore = Chroma(
         collection_name="video-rag",
-        embedding=OpenAIEmbeddings(),
+        embedding_function=OpenAIEmbeddings(),
         persist_directory="./.chroma"
     )
+
+    vectorstore.add_documents(docs)
 
     # Create retriever
     retriever = Chroma(
