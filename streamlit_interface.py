@@ -1,5 +1,8 @@
 import streamlit as st
 import re
+
+from streamlit import session_state
+
 from ingestion import initialize_vectorstore, get_chain
 from summarize import summarize_transcript
 from transcript import transcript_from_youtubeloader
@@ -99,85 +102,94 @@ def streamlit_interface():
             language_options,
             index=language_options.index(st.session_state.selected_language) # Default is 'Original Language'
         )
+    if session_state.model is not None:
+        # If the user clicks the "Summarize" button with a new url, old data will be renewed.
+        if st.button("Summarize"):
+            if not st.session_state.video_url or not is_valid_youtube_url(st.session_state.video_url):
+                st.warning("Please enter a valid URL!")
+                return
 
-    # If the user clicks the "Summarize" button with a new url, old data will be renewed.
-    if st.button("Summarize"):
-        if not st.session_state.video_url or not is_valid_youtube_url(st.session_state.video_url):
-            st.warning("Please enter a valid URL!")
-            return
+            # If the given URL is different from the previous URL, clean the old data.
+            if st.session_state.video_url != st.session_state.current_url:
+                st.session_state.docs = None
+                st.session_state.summary = ""
+                st.session_state.audio_path = ""
+                st.session_state.retriever = None
+                st.session_state.messages = []
+                st.session_state.current_url = st.session_state.video_url
 
-        # If the given URL is different from the previous URL, clean the old data.
-        if st.session_state.video_url != st.session_state.current_url:
-            st.session_state.docs = None
-            st.session_state.summary = ""
-            st.session_state.audio_path = ""
-            st.session_state.retriever = None
-            st.session_state.messages = []
-            st.session_state.current_url = st.session_state.video_url
+            with st.spinner("Getting the transcript..."):
+                # Create transcript only once per URL
+                if st.session_state.docs is None:
+                    docs = transcript_from_youtubeloader(st.session_state.video_url)
+                    st.session_state.docs = docs
+                else:
+                    docs = st.session_state.docs
 
-        with st.spinner("Getting the transcript..."):
-            # Create transcript only once per URL
-            if st.session_state.docs is None:
-                docs = transcript_from_youtubeloader(st.session_state.video_url)
-                st.session_state.docs = docs
-            else:
-                docs = st.session_state.docs
+            if not docs:
+                st.error("Transcript could not be obtained.")
+                return
 
-        if not docs:
-            st.error("Transcript could not be obtained.")
-            return
-
-        with st.spinner("Transcript is being summarized..."):
-            st.session_state.summary = summarize_transcript(
-                docs,
-                st.session_state.summary_type,
-                st.session_state.summary_length,
-                st.session_state.model,
-                st.session_state.selected_language
-            )
-
-        if st.session_state.summary:
-            with st.spinner("The summary is being voiced..."):
-                st.session_state.audio_path = voiceover(st.session_state.summary)
-            st.success("Audio summary generated successfully!")
-
-        # Create the vectorstore and retriever only once per URL
-        if st.session_state.retriever is None:
-            st.session_state.retriever = initialize_vectorstore(st.session_state.video_url)
-
-    # Display the summary and audio every time streamlit interface reruns.
-    if st.session_state.summary:
-        st.subheader("Video Summary")
-        st.write(st.session_state.summary)
-        if st.session_state.audio_path:
-            st.audio(st.session_state.audio_path, format="audio/mp3")
-
-        # Chat interface
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-
-        # Accept user input for chat
-        if prompt := st.chat_input("What is up?"):
-
-            # Get related docs
-            if st.session_state.retriever is not None:
-                related_docs = st.session_state.retriever.get_relevant_documents(prompt)
-                context = "\n\n".join([doc.page_content for doc in related_docs])
-            else:
-                context = ""
-
-            # Add every question and answer to the previous messages
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
-
-            # Get the retrieval chain
-            with st.chat_message("assistant"):
-                response_obj = get_chain(st.session_state.model).invoke(
-                    {"question": prompt, "context": context},
-                    config={"configurables": {"thread_id": "abcd_123"}}
+            with st.spinner("Transcript is being summarized..."):
+                st.session_state.summary = summarize_transcript(
+                    docs,
+                    st.session_state.summary_type,
+                    st.session_state.summary_length,
+                    st.session_state.model,
+                    st.session_state.selected_language
                 )
-                response_text = response_obj if isinstance(response_obj, str) else response_obj.content
-                st.markdown(response_text)
-            st.session_state.messages.append({"role": "assistant", "content": response_text})
+
+            if st.session_state.summary:
+                with st.spinner("The summary is being voiced..."):
+                    st.session_state.audio_path = voiceover(st.session_state.summary)
+                st.success("Audio summary generated successfully!")
+
+            # Create the vectorstore and retriever only once per URL
+            if st.session_state.retriever is None:
+                st.session_state.retriever = initialize_vectorstore(st.session_state.video_url)
+
+        # Display the summary and audio every time streamlit interface reruns.
+        if st.session_state.summary:
+            st.subheader("Video Summary")
+            st.write(st.session_state.summary)
+            if st.session_state.audio_path:
+                st.audio(st.session_state.audio_path, format="audio/mp3")
+
+            # Chat interface
+            for message in st.session_state.messages:
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
+
+            # Accept user input for chat
+            if prompt := st.chat_input("What is up?"):
+
+                # Get related docs
+                if st.session_state.retriever is not None:
+                    related_docs = st.session_state.retriever.get_relevant_documents(prompt)
+                    context = "\n\n".join([doc.page_content for doc in related_docs])
+                else:
+                    context = ""
+
+                # Add every question and answer to the previous messages
+                st.session_state.messages.append({"role": "user", "content": prompt})
+                with st.chat_message("user"):
+                    st.markdown(prompt)
+
+                try:
+                    # Get the retrieval chain
+                    with st.chat_message("assistant"):
+                        response_obj = get_chain(st.session_state.model).invoke(
+                            {"question": prompt, "context": context},
+                            config={"configurables": {"thread_id": "abcd_123"}}
+                        )
+                        response_text = response_obj if isinstance(response_obj, str) else response_obj.content
+                        st.markdown(response_text)
+                    st.session_state.messages.append({"role": "assistant", "content": response_text})
+                except Exception as e:
+                    match = re.search(r"'message': '([^']*)'", str(e))
+                    error_message = match.group(1) if match else ("Unknown Error! (Probably no API for the chosen model "
+                                                                  "or the balance is too low for the API Key.)")
+                    st.error(error_message)
+
+    else:
+        st.error("Please choose a model with an API key.")
