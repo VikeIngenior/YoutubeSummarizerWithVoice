@@ -1,8 +1,6 @@
 import re
 from dotenv import load_dotenv
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from typing_extensions import Optional
-
 from constants import FIRST_PERSON_PROMPT, THIRD_PERSON_PROMPT
 import streamlit as st
 from typing import Optional, List

@@ -1,11 +1,8 @@
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from sympy.physics.units import temperature
+from langchain_openai import OpenAIEmbeddings
 from chromadb import PersistentClient
 from transcript import transcript_from_youtubeloader
 from langchain_chroma import Chroma
-from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-import os
 from constants import RAG_CHAIN_PROMPT
 
 def delete_previous_collection(collection_name: str):

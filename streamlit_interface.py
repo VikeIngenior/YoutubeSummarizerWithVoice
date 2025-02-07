@@ -5,7 +5,6 @@ from summarize import summarize_transcript
 from transcript import transcript_from_youtubeloader
 from voiceover import voiceover
 from choose_model import get_available_models, choose_model
-from openai import OpenAI
 from dotenv import load_dotenv
 load_dotenv()
 
