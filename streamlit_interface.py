@@ -153,32 +153,32 @@ def streamlit_interface():
         if st.session_state.audio_path:
             st.audio(st.session_state.audio_path, format="audio/mp3")
 
-    # Chat interface
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        # Chat interface
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
-    # Accept user input for chat
-    if prompt := st.chat_input("What is up?"):
+        # Accept user input for chat
+        if prompt := st.chat_input("What is up?"):
 
-        # Get related docs
-        if st.session_state.retriever is not None:
-            related_docs = st.session_state.retriever.get_relevant_documents(prompt)
-            context = "\n\n".join([doc.page_content for doc in related_docs])
-        else:
-            context = ""
+            # Get related docs
+            if st.session_state.retriever is not None:
+                related_docs = st.session_state.retriever.get_relevant_documents(prompt)
+                context = "\n\n".join([doc.page_content for doc in related_docs])
+            else:
+                context = ""
 
-        # Add every question and answer to the previous messages
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+            # Add every question and answer to the previous messages
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
 
-        # Get the retrieval chain
-        with st.chat_message("assistant"):
-            response_obj = get_chain().invoke(
-                {"question": prompt, "context": context},
-                config={"configurables": {"thread_id": "abcd_123"}}
-            )
-            response_text = response_obj if isinstance(response_obj, str) else response_obj.content
-            st.markdown(response_text)
-        st.session_state.messages.append({"role": "assistant", "content": response_text})
+            # Get the retrieval chain
+            with st.chat_message("assistant"):
+                response_obj = get_chain().invoke(
+                    {"question": prompt, "context": context},
+                    config={"configurables": {"thread_id": "abcd_123"}}
+                )
+                response_text = response_obj if isinstance(response_obj, str) else response_obj.content
+                st.markdown(response_text)
+            st.session_state.messages.append({"role": "assistant", "content": response_text})
