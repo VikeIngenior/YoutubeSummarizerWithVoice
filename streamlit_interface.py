@@ -175,7 +175,7 @@ def streamlit_interface():
 
             # Get the retrieval chain
             with st.chat_message("assistant"):
-                response_obj = get_chain().invoke(
+                response_obj = get_chain(st.session_state.model).invoke(
                     {"question": prompt, "context": context},
                     config={"configurables": {"thread_id": "abcd_123"}}
                 )

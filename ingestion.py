@@ -49,9 +49,9 @@ def initialize_vectorstore(video_url: str):
 
     return retriever
 
-def get_chain():
+def get_chain(llm):
 
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    llm.temperature=0
 
     prompt = PromptTemplate.from_template(""" 
     You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. 
