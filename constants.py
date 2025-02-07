@@ -21,3 +21,16 @@ THIRD_PERSON_PROMPT = ChatPromptTemplate.from_messages(
       The summary should be {length} tenth long of the context. \
       Below is the transcript of the video. \\n\\n{context}\\nPreferred Language: {language}")]
 )
+
+RAG_CHAIN_PROMPT = ChatPromptTemplate.from_messages(
+    [("system",
+    "You are a helpful assistant answering questions about a YouTube video using the provided context. \
+    Use the following retrieved context to answer the question. \
+    If you don't know the answer, just say that you don't know. \
+    Respond in up to three concise sentences. \
+    You must answer the question with the same language as the question. \
+    Here is the question and context: \n\n \
+    Question: {question}\n \
+    Context: {context}\n \
+    Answer: ")]
+)
