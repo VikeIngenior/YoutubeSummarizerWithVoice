@@ -1,6 +1,5 @@
 from pathlib import Path
-import os
-from openai import OpenAI, OpenAIError
+from openai import OpenAI
 
 speech_file_path = Path(__file__).parent / 'speech.mp3'
 def voiceover(summary: str, api_key: str) -> Path:
