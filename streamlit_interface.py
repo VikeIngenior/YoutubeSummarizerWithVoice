@@ -89,6 +89,11 @@ def streamlit_interface():
             default_api = os.getenv("GOOGLE_API_KEY", "")
             st.session_state.google_api_key = st.text_input("Enter Google API Key:", value=default_api, type="password")
             os.environ["GOOGLE_API_KEY"] = st.session_state.google_api_key
+        elif st.session_state.selected_model == "DeepSeek":
+            default_api = os.getenv("DEEPSEEK_API_KEY", "")
+            st.session_state.deepseek_api_key = st.text_input("Enter DeepSeek API Key:", value=default_api, type="password")
+            os.environ["DEEPSEEK_API_KEY"] = st.session_state.deepseek_api_key
+
 
         # Show information to the user about the model.
         st.session_state.model = choose_model(st.session_state.selected_model)
@@ -96,7 +101,8 @@ def streamlit_interface():
             model_mapping = {
                 "OpenAI": "GPT-4o Mini",
                 "Anthropic Claude": "Claude 3 Opus",
-                "Google Gemini": "Gemini 1.5 Pro"
+                "Google Gemini": "Gemini 1.5 Pro",
+                "DeepSeek": "DeepSeek-V3",
             }
             selected_model_info = model_mapping.get(st.session_state.selected_model, "Unknown Model")
             st.info(f"Using **{selected_model_info}** for summarization.")
@@ -212,7 +218,7 @@ def streamlit_interface():
                     st.session_state.messages.append({"role": "assistant", "content": response_text})
                 except Exception as e:
                     match = re.search(r"'message': '([^']*)'", str(e))
-                    error_message = match.group(1) if match else ("Unknown Error! (Probably no API for the chosen model or the balance is too low for the API Key.)")
+                    error_message = match.group(1) if match else "Unknown Error! (Probably no API for the chosen model or the balance is too low for the API Key.)"
                     st.error(error_message)
     else:
         st.error("Please choose a model with an API key.")
