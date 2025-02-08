@@ -6,8 +6,6 @@ from summarize import summarize_transcript
 from transcript import transcript_from_youtubeloader
 from voiceover import voiceover
 from choose_model import get_available_models, choose_model
-from dotenv import load_dotenv
-load_dotenv()
 
 docs = []
 

@@ -1,10 +1,8 @@
 import re
-from dotenv import load_dotenv
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from constants import FIRST_PERSON_PROMPT, THIRD_PERSON_PROMPT
 import streamlit as st
 from typing import Optional, List
-load_dotenv()
 
 def summarize_transcript(docs: List, prompt_type:  str, length: str, llm, language: str) -> Optional[str]:
     """
