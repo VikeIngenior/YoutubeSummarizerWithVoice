@@ -76,8 +76,6 @@ def streamlit_interface():
             index=model_options.index(st.session_state.selected_model) if st.session_state.selected_model in model_options else 0
         )
 
-        print(st.session_state.selected_model)
-
         # Yeni: Seçilen modele göre API Key girme alanı.
         if st.session_state.selected_model == "OpenAI GPT-4o":
             default_api = os.getenv("OPENAI_API_KEY", "")
@@ -159,12 +157,24 @@ def streamlit_interface():
                     st.session_state.audio_path = ""
                 else:
                     with st.spinner("The summary is being voiced..."):
-                        st.session_state.audio_path = voiceover(st.session_state.summary)
+                        try:
+                            st.session_state.audio_path = voiceover(st.session_state.summary, st.session_state.openai_api_key)
+                        except Exception as e:
+                            match = re.search(r"'message': '([^']*)'", str(e))
+                            error_message = match.group(1) if match else (
+                                "Unknown Error! (Please check whether you are API Key is valid.)")
+                            st.error(error_message)
                     st.success("Audio summary generated successfully!")
 
             # Create the vectorstore and retriever only once per URL
             if st.session_state.retriever is None:
-                st.session_state.retriever = initialize_vectorstore(st.session_state.video_url)
+                try:
+                    st.session_state.retriever = initialize_vectorstore(st.session_state.video_url)
+                except Exception as e:
+                    match = re.search(r"'message': '([^']*)'", str(e))
+                    error_message = match.group(1) if match else (
+                        "Unknown Error! (Please check whether you are API Key is valid.)")
+                    st.error(error_message)
 
         # Display the summary and audio every time the interface reruns.
         if st.session_state.summary:
