@@ -6,3 +6,5 @@ langchain-anthropic
 langchain-openai
 langchain-google-genai
 langchain-deepseek
+chromadb
+langchain-chroma
