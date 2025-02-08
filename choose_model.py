@@ -3,12 +3,14 @@ from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai  import ChatGoogleGenerativeAI
 from typing import Union
+from langchain_deepseek import ChatDeepSeek
 
 def get_available_models():
     return {
         "OpenAI": os.getenv("OPENAI_API_KEY"),
         "Anthropic Claude": os.getenv("ANTHROPIC_API_KEY"),
-        "Google Gemini": os.getenv("GOOGLE_API_KEY")
+        "Google Gemini": os.getenv("GOOGLE_API_KEY"),
+        "DeepSeek": os.getenv("DEEPSEEK_API_KEY"),
     }
 
 
@@ -29,7 +31,7 @@ def check_api_key(selected_model: str) -> bool:
         return True
     return False
 
-def choose_model(selected_model: str) -> Union[ChatOpenAI, ChatAnthropic, ChatGoogleGenerativeAI, None]:
+def choose_model(selected_model: str) -> Union[ChatOpenAI, ChatAnthropic, ChatGoogleGenerativeAI, ChatDeepSeek, None]:
     """
     Selects and returns a chatbot model based on the given model name.
 
@@ -50,5 +52,7 @@ def choose_model(selected_model: str) -> Union[ChatOpenAI, ChatAnthropic, ChatGo
             return ChatAnthropic(model="claude-3-opus-latest")
         elif selected_model == "Google Gemini":
             return ChatGoogleGenerativeAI("gemini-1.5-pro")
+        elif selected_model == "DeepSeek":
+            return ChatDeepSeek(model="deepseek-chat")
 
     return None

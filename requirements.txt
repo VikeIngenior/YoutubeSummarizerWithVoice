@@ -5,3 +5,4 @@ python-dotenv
 langchain-anthropic
 langchain-openai
 langchain-google-genai
+langchain-deepseek
