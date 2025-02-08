@@ -195,7 +195,7 @@ def streamlit_interface():
                     st.markdown(message["content"])
 
             # Accept user input for chat.
-            if prompt := st.chat_input("What is up?"):
+            if prompt := st.chat_input("Ask your question:"):
                 # Get related docs if available.
                 if st.session_state.retriever is not None:
                     related_docs = st.session_state.retriever.get_relevant_documents(prompt)
