@@ -1,9 +1,9 @@
 from pathlib import Path
-from openai import OpenAI
+import os
+from openai import OpenAI, OpenAIError
 
-client = OpenAI()
 speech_file_path = Path(__file__).parent / 'speech.mp3'
-def voiceover(summary: str) -> Path:
+def voiceover(summary: str, api_key: str) -> Path:
     """
     Generates a voiceover from the given text summary using a text-to-speech model.
 
@@ -15,9 +15,12 @@ def voiceover(summary: str) -> Path:
 
     Args:
         summary (str): The summary to be converted into speech.
+        api_key (str): The API key to use for TTS.
     Returns:
         str: The file path where the generated speech is saved.
     """
+    client = OpenAI(api_key=api_key)
+
     response = client.audio.speech.create(
         model="tts-1",
         voice="alloy",
