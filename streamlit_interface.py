@@ -99,7 +99,7 @@ def streamlit_interface():
             model_mapping = {
                 "OpenAI": "GPT-4o Mini",
                 "Anthropic Claude": "Claude 3 Opus",
-                "Google Gemini": "Gemini 1.5 Pro",
+                "Google Gemini": "Gemini 2.0 Flash",
                 "DeepSeek": "DeepSeek-V3",
             }
             selected_model_info = model_mapping.get(st.session_state.selected_model, "Unknown Model")

@@ -51,7 +51,7 @@ def choose_model(selected_model: str) -> Union[ChatOpenAI, ChatAnthropic, ChatGo
         elif selected_model == "Anthropic Claude":
             return ChatAnthropic(model="claude-3-opus-latest")
         elif selected_model == "Google Gemini":
-            return ChatGoogleGenerativeAI("gemini-1.5-pro")
+            return ChatGoogleGenerativeAI(model="gemini-2.0-flash-thinking-exp-01-21")
         elif selected_model == "DeepSeek":
             return ChatDeepSeek(model="deepseek-chat")
 
