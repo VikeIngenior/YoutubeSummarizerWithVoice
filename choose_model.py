@@ -6,7 +6,7 @@ from typing import Union
 
 def get_available_models():
     return {
-        "OpenAI GPT-4o": os.getenv("OPENAI_API_KEY"),
+        "OpenAI": os.getenv("OPENAI_API_KEY"),
         "Anthropic Claude": os.getenv("ANTHROPIC_API_KEY"),
         "Google Gemini": os.getenv("GOOGLE_API_KEY")
     }
@@ -44,7 +44,7 @@ def choose_model(selected_model: str) -> Union[ChatOpenAI, ChatAnthropic, ChatGo
         the API key is not available.
     """
     if check_api_key(selected_model):
-        if selected_model == "OpenAI GPT-4o":
+        if selected_model == "OpenAI":
             return ChatOpenAI(model="gpt-4o-mini")
         elif selected_model == "Anthropic Claude":
             return ChatAnthropic(model="claude-3-opus-latest")

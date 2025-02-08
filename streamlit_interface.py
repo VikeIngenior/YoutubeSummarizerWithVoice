@@ -77,7 +77,7 @@ def streamlit_interface():
         )
 
         # Yeni: Seçilen modele göre API Key girme alanı.
-        if st.session_state.selected_model == "OpenAI GPT-4o":
+        if st.session_state.selected_model == "OpenAI":
             default_api = os.getenv("OPENAI_API_KEY", "")
             st.session_state.openai_api_key = st.text_input("Enter OpenAI API Key:", value=default_api, type="password")
             os.environ["OPENAI_API_KEY"] = st.session_state.openai_api_key
@@ -94,7 +94,7 @@ def streamlit_interface():
         st.session_state.model = choose_model(st.session_state.selected_model)
         if st.session_state.model is not None:
             model_mapping = {
-                "OpenAI GPT-4o": "GPT-4o Mini",
+                "OpenAI": "GPT-4o Mini",
                 "Anthropic Claude": "Claude 3 Opus",
                 "Google Gemini": "Gemini 1.5 Pro"
             }
