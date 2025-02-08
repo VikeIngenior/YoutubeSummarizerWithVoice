@@ -4,10 +4,11 @@ from transcript import transcript_from_youtubeloader
 from langchain_chroma import Chroma
 from langchain_core.output_parsers import StrOutputParser
 from constants import RAG_CHAIN_PROMPT
+import os
 
 def delete_previous_collection(collection_name: str):
     try:
-        chroma_client = PersistentClient(path=".chroma")
+        chroma_client = PersistentClient(path="./.chroma")
         chroma_client.delete_collection(collection_name)
     except Exception as e:
         raise Exception(f"Unable to delete collection: {e}")
@@ -22,9 +23,9 @@ def initialize_vectorstore(video_url: str):
         Returns:
             retriever: Chroma retriever instance.
         """
-
     # Clean the previous collection
-    delete_previous_collection("video-rag")
+    if os.path.exists("./.chroma"):
+        delete_previous_collection("video-rag")
 
     # Get transcript documents
     docs = transcript_from_youtubeloader(video_url)
