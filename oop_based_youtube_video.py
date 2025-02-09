@@ -56,7 +56,7 @@ class Video:
             length (str): Length of summary ('Short' or 'Long').
             language (str): Output language of the summary.
         Returns:
-            Optional[str]: The summarized text if successful, otherwise None.
+            str: The summarized text if successful, otherwise None.
         """
         summary_type = {"First-Person": FIRST_PERSON_PROMPT, "Third-Person": THIRD_PERSON_PROMPT}
         summary_length = {"Short": 2, "Long": 7}
