@@ -13,6 +13,22 @@ def is_valid_youtube_url(url):
     return youtube_pattern.match(url)
 
 def streamlit_oop_last():
+    """
+    Streamlit interface for summarizer.
+
+    Steps:
+      - Create a Video object (if URL has changed or not yet created)
+      - Retrieve the transcript from the video
+      - Generate a summary using the provided transcript, model and settings
+      - Generate audio for the summary (if an OpenAI API key is provided)
+      - Initialize a retriever using the transcripts of the video
+      - Display the summary and audio
+      - Provide a chat interface for Q&A using the summary and retriever context
+
+    Session state is used to keep data between reruns.
+    """
+
+    # Initialize session state keys
     if "video_url" not in st.session_state:
         st.session_state.video_url = ""
     if "current_url" not in st.session_state:
@@ -24,11 +40,14 @@ def streamlit_oop_last():
     if "retriever" not in st.session_state:
         st.session_state.retriever = None
 
+    # Page header
     st.title("Youtube Video Summarizer")
     st.markdown("Type the URL and get the Summary!")
 
+    # Sidebar settings
     with st.sidebar:
         st.markdown("### Summary Settings")
+        # Select summary type and length
         summary_type = st.selectbox("Choose summary type:", ["Third-Person", "First-Person"])
         summary_length = st.selectbox("Choose summary length:", ["Short", "Long"])
 
@@ -36,6 +55,7 @@ def streamlit_oop_last():
         model_options = list(get_available_models().keys())
         selected_model = st.selectbox("Select a model for summarization:", model_options)
 
+        # Get the APIs for selected models
         if selected_model == "OpenAI":
             default_api = os.getenv("OPENAI_API_KEY", "")
             openai_api = st.text_input("Enter OpenAI API Key:", value=default_api, type="password")
@@ -53,6 +73,7 @@ def streamlit_oop_last():
             deepseek_api = st.text_input("Enter DeepSeek API Key:", value=default_api, type="password")
             os.environ["DEEPSEEK_API_KEY"] = deepseek_api
 
+        # Create the model instance from the selected model
         model_instance = choose_model(selected_model)
         if model_instance is not None:
             model_mapping = {
@@ -64,7 +85,7 @@ def streamlit_oop_last():
             selected_model_info = model_mapping.get(selected_model, "Unknown Model")
             st.info(f"Using **{selected_model_info}** for summarization.")
         else:
-            st.warning("No API Key was found for the chosen model!")
+            st.warning("No API Key was found for the chosen model!") # Only way for the model to be None is if there is no API key provided
 
         st.markdown("### Choose the Summary Language")
         language = st.selectbox("Select the output language:",
@@ -74,16 +95,19 @@ def streamlit_oop_last():
         st.info("Please choose a model and enter the API key.")
         st.info("Note: You must enter an OpenAI API key if you want to get an audio of the summary!")
 
+    # Create the video object only if it doesn't exist or if the URL has changed.
     st.session_state.video_url = st.text_input("Enter the URL:", value=st.session_state.video_url)
     if not st.session_state.video_obj or st.session_state.video_url != st.session_state.current_url:
         st.session_state.video_obj = Video(st.session_state.video_url)
 
     if model_instance is not None:
         if st.button("Summarize"):
+            # Check if the URL is valid
             if not is_valid_youtube_url(st.session_state.video_url):
                 st.warning("Please enter a valid URL!")
                 return
 
+            # Clear old data if a new URL is provided
             if st.session_state.video_url != st.session_state.current_url:
                 st.session_state.video_obj = None
                 st.session_state.messages = []
@@ -93,16 +117,19 @@ def streamlit_oop_last():
             if st.session_state.video_obj is None:
                 st.session_state.video_obj = Video(st.session_state.video_url)
 
+            # Get transcript from the video.
             with st.spinner("Getting the transcript..."):
                 st.session_state.video_obj.get_transcript()
                 if st.session_state.video_obj.transcript is None:
                     st.error("Transcript could not be obtained.")
                     st.stop()
 
+            # Summarize transcript
             with st.spinner("Summarizing transcript..."):
                 st.session_state.video_obj.get_summary(model_instance, summary_type, summary_length, language)
 
             if st.session_state.video_obj.summary:
+                # Don't generate audio if no OPENAI API key is provided
                 if not os.getenv("OPENAI_API_KEY"):
                     st.warning("No OpenAI API key provided; audio summary generation is disabled.")
                     st.session_state.video_obj.audio = None
@@ -113,21 +140,26 @@ def streamlit_oop_last():
                         except Exception as e:
                             st.error("Error generating audio: " + str(e))
 
+            # Initialize the retriever
             if st.session_state.retriever is None:
                 try:
                     st.session_state.retriever = initialize_vectorstore(st.session_state.video_url)
                 except Exception as e:
                     st.error("Error initializing vectorstore: " + str(e))
 
+        # Display the generated summary and audio if available.
         if st.session_state.video_obj is not None and st.session_state.video_obj.summary:
             st.subheader("Video Summary")
             st.write(st.session_state.video_obj.summary)
             if st.session_state.video_obj.audio:
                 st.audio(st.session_state.video_obj.audio, format="audio/mp3")
 
+            # Display chat messages from history.
             for msg in st.session_state.messages:
                 with st.chat_message(msg["role"]):
                     st.markdown(msg["content"])
+
+            # Accept user input for chat.
             if prompt := st.chat_input("Ask your question:"):
                 # Retrieve context from vectorstore if available
                 try:
@@ -143,7 +175,7 @@ def streamlit_oop_last():
                 with st.chat_message("user"):
                     st.markdown(prompt)
                 try:
-                    # Sohbet geçmişini de prompta ekleyelim.
+                    # Append conversation history to the prompt
                     with st.chat_message("assistant"):
                         history_str = "\n".join(
                             [f"{msg['role']}: {msg['content']}" for msg in st.session_state.messages])
