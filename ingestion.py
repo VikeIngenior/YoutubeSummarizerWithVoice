@@ -13,7 +13,7 @@ def delete_previous_collection(collection_name: str):
     except Exception as e:
         raise Exception(f"Unable to delete collection: {e}")
 
-def initialize_vectorstore(video_url: str):
+def initialize_vectorstore(video_url: str, transcript):
     """
         Creates a Chroma vectorstore and retriever using the transcript of the video.
 
@@ -28,7 +28,7 @@ def initialize_vectorstore(video_url: str):
         delete_previous_collection("video-rag")
 
     # Get transcript documents
-    docs = transcript_from_youtubeloader(video_url)
+    docs = transcript
 
     # Initialize vectorstore
     vectorstore = Chroma(

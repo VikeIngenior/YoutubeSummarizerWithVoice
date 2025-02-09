@@ -143,7 +143,7 @@ def streamlit_interface():
             # Initialize the retriever
             if st.session_state.retriever is None:
                 try:
-                    st.session_state.retriever = initialize_vectorstore(st.session_state.video_url)
+                    st.session_state.retriever = initialize_vectorstore(st.session_state.video_url, st.session_state.video_obj.transcript)
                 except Exception as e:
                     st.error("Error initializing vectorstore: " + str(e))
 
