@@ -2,12 +2,8 @@ import streamlit as st
 import re
 import os
 from ingestion import initialize_vectorstore, get_chain
-from summarize import summarize_transcript
-from transcript import transcript_from_youtubeloader
-from voiceover import voiceover
 from choose_model import get_available_models, choose_model
-
-docs = []
+from oop_based_youtube_video import Video
 
 def is_valid_youtube_url(url):
     """
@@ -17,206 +13,177 @@ def is_valid_youtube_url(url):
     return youtube_pattern.match(url)
 
 def streamlit_interface():
-    st.title("Youtube Video Summarizer")
-    st.markdown("Type the URL and get the Summary!")
-    st.info("Note: You must enter an OpenAI API key if you want to get an audio of the summary!")
+    """
+    Streamlit interface for summarizer.
 
-    # Initialize session state keys (if not already set)
+    Steps:
+      - Create a Video object (if URL has changed or not yet created)
+      - Retrieve the transcript from the video
+      - Generate a summary using the provided transcript, model and settings
+      - Generate audio for the summary (if an OpenAI API key is provided)
+      - Initialize a retriever using the transcripts of the video
+      - Display the summary and audio
+      - Provide a chat interface for Q&A using the summary and retriever context
+
+    Session state is used to keep data between reruns.
+    """
+
+    # Initialize session state keys
     if "video_url" not in st.session_state:
         st.session_state.video_url = ""
     if "current_url" not in st.session_state:
         st.session_state.current_url = ""
-    if "summary_type" not in st.session_state:
-        st.session_state.summary_type = "Third-Person"
-    if "summary_length" not in st.session_state:
-        st.session_state.summary_length = "Short"
-    if "selected_model" not in st.session_state:
-        available_models = list(get_available_models().keys())
-        st.session_state.selected_model = available_models[0] if available_models else ""
-    if "selected_language" not in st.session_state:
-        st.session_state.selected_language = "Original Language"
     if "messages" not in st.session_state:
         st.session_state.messages = []
-
-    # Transcript, summary, audio and retriever storage
-    if "docs" not in st.session_state:
-        st.session_state.docs = None
-    if "summary" not in st.session_state:
-        st.session_state.summary = ""
-    if "audio_path" not in st.session_state:
-        st.session_state.audio_path = ""
+    if "video_obj" not in st.session_state:
+        st.session_state.video_obj = None
     if "retriever" not in st.session_state:
         st.session_state.retriever = None
 
-    st.session_state.video_url = st.text_input("Enter the URL:", value=st.session_state.video_url)
+    # Page header
+    st.title("Youtube Video Summarizer")
+    st.markdown("Type the URL and get the Summary!")
 
     # Sidebar settings
     with st.sidebar:
         st.markdown("### Summary Settings")
-        st.session_state.summary_type = st.selectbox(
-            "Choose the type of the summary:",
-            ['First-Person', 'Third-Person'],
-            index=0 if st.session_state.summary_type == "First-Person" else 1
-        )
-        st.session_state.summary_length = st.selectbox(
-            "Choose the length of the summary:",
-            ['Short', 'Long'],
-            index=0 if st.session_state.summary_length == "Short" else 1
-        )
+        # Select summary type and length
+        summary_type = st.selectbox("Choose summary type:", ["Third-Person", "First-Person"])
+        summary_length = st.selectbox("Choose summary length:", ["Short", "Long"])
 
         st.markdown("### Choose a Model")
         model_options = list(get_available_models().keys())
-        if st.session_state.selected_model not in model_options:
-            st.session_state.selected_model = model_options[0] if model_options else ""
-        st.session_state.selected_model = st.selectbox(
-            "Select a model for summarization:",
-            model_options,
-            index=model_options.index(st.session_state.selected_model) if st.session_state.selected_model in model_options else 0
-        )
+        selected_model = st.selectbox("Select a model for summarization:", model_options)
 
-        # Yeni: Seçilen modele göre API Key girme alanı.
-        if st.session_state.selected_model == "OpenAI":
+        # Get the APIs for selected models
+        if selected_model == "OpenAI":
             default_api = os.getenv("OPENAI_API_KEY", "")
-            st.session_state.openai_api_key = st.text_input("Enter OpenAI API Key:", value=default_api, type="password")
-            os.environ["OPENAI_API_KEY"] = st.session_state.openai_api_key
-        elif st.session_state.selected_model == "Anthropic Claude":
+            openai_api = st.text_input("Enter OpenAI API Key:", value=default_api, type="password")
+            os.environ["OPENAI_API_KEY"] = openai_api
+        elif selected_model == "Anthropic Claude":
             default_api = os.getenv("ANTHROPIC_API_KEY", "")
-            st.session_state.anthropic_api_key = st.text_input("Enter Anthropic API Key:", value=default_api, type="password")
-            os.environ["ANTHROPIC_API_KEY"] = st.session_state.anthropic_api_key
-        elif st.session_state.selected_model == "Google Gemini":
+            anthropic_api = st.text_input("Enter Anthropic API Key:", value=default_api, type="password")
+            os.environ["ANTHROPIC_API_KEY"] = anthropic_api
+        elif selected_model == "Google Gemini":
             default_api = os.getenv("GOOGLE_API_KEY", "")
-            st.session_state.google_api_key = st.text_input("Enter Google API Key:", value=default_api, type="password")
-            os.environ["GOOGLE_API_KEY"] = st.session_state.google_api_key
-        elif st.session_state.selected_model == "DeepSeek":
+            google_api = st.text_input("Enter Google API Key:", value=default_api, type="password")
+            os.environ["GOOGLE_API_KEY"] = google_api
+        elif selected_model == "DeepSeek":
             default_api = os.getenv("DEEPSEEK_API_KEY", "")
-            st.session_state.deepseek_api_key = st.text_input("Enter DeepSeek API Key:", value=default_api, type="password")
-            os.environ["DEEPSEEK_API_KEY"] = st.session_state.deepseek_api_key
+            deepseek_api = st.text_input("Enter DeepSeek API Key:", value=default_api, type="password")
+            os.environ["DEEPSEEK_API_KEY"] = deepseek_api
 
-
-        # Show information to the user about the model.
-        st.session_state.model = choose_model(st.session_state.selected_model)
-        if st.session_state.model is not None:
+        # Create the model instance from the selected model
+        model_instance = choose_model(selected_model)
+        if model_instance is not None:
             model_mapping = {
                 "OpenAI": "GPT-4o Mini",
                 "Anthropic Claude": "Claude 3 Opus",
                 "Google Gemini": "Gemini 2.0 Flash",
                 "DeepSeek": "DeepSeek-V3",
             }
-            selected_model_info = model_mapping.get(st.session_state.selected_model, "Unknown Model")
+            selected_model_info = model_mapping.get(selected_model, "Unknown Model")
             st.info(f"Using **{selected_model_info}** for summarization.")
         else:
-            st.warning("No API Key was found for the chosen model!")
+            st.warning("No API Key was found for the chosen model!") # Only way for the model to be None is if there is no API key provided
 
-        st.markdown("### Choose the Summary Language.")
-        language_options = ["Original Language", "English", "Turkish", "Spanish", "French", "German"]
-        if st.session_state.selected_language not in language_options:
-            st.session_state.selected_language = language_options[0]
-        st.session_state.selected_language = st.selectbox(
-            "Select the output language:",
-            language_options,
-            index=language_options.index(st.session_state.selected_language)
-        )
+        st.markdown("### Choose the Summary Language")
+        language = st.selectbox("Select the output language:",
+                                ["Original Language", "English", "Turkish", "Spanish", "French", "German"])
 
-    if st.session_state.model is not None:
-        # If the user clicks the "Summarize" button with a new URL, old data will be renewed.
+    if model_instance is None:
+        st.info("Please choose a model and enter the API key.")
+        st.info("Note: You must enter an OpenAI API key if you want to get an audio of the summary!")
+
+    # Create the video object only if it doesn't exist or if the URL has changed.
+    st.session_state.video_url = st.text_input("Enter the URL:", value=st.session_state.video_url)
+    if not st.session_state.video_obj or st.session_state.video_url != st.session_state.current_url:
+        st.session_state.video_obj = Video(st.session_state.video_url)
+
+    if model_instance is not None:
         if st.button("Summarize"):
-            if not st.session_state.video_url or not is_valid_youtube_url(st.session_state.video_url):
+            # Check if the URL is valid
+            if not is_valid_youtube_url(st.session_state.video_url):
                 st.warning("Please enter a valid URL!")
                 return
 
-            # If the given URL is different from the previous URL, clean the old data.
+            # Clear old data if a new URL is provided
             if st.session_state.video_url != st.session_state.current_url:
-                st.session_state.docs = None
-                st.session_state.summary = ""
-                st.session_state.audio_path = ""
-                st.session_state.retriever = None
+                st.session_state.video_obj = None
                 st.session_state.messages = []
+                st.session_state.retriever = None
                 st.session_state.current_url = st.session_state.video_url
 
+            if st.session_state.video_obj is None:
+                st.session_state.video_obj = Video(st.session_state.video_url)
+
+            # Get transcript from the video.
             with st.spinner("Getting the transcript..."):
-                # Create transcript only once per URL
-                if st.session_state.docs is None:
-                    docs = transcript_from_youtubeloader(st.session_state.video_url)
-                    st.session_state.docs = docs
-                else:
-                    docs = st.session_state.docs
+                st.session_state.video_obj.get_transcript()
+                if st.session_state.video_obj.transcript is None:
+                    st.error("Transcript could not be obtained.")
+                    st.stop()
 
-            if not docs:
-                st.error("Transcript could not be obtained.")
-                return
+            # Summarize transcript
+            with st.spinner("Summarizing transcript..."):
+                st.session_state.video_obj.get_summary(model_instance, summary_type, summary_length, language)
 
-            with st.spinner("Transcript is being summarized..."):
-                st.session_state.summary = summarize_transcript(
-                    docs,
-                    st.session_state.summary_type,
-                    st.session_state.summary_length,
-                    st.session_state.model,
-                    st.session_state.selected_language
-                )
-
-            if st.session_state.summary:
-                # Check if an OPENAI_API_KEY provided to create an audio
-                if not st.session_state.openai_api_key:
+            if st.session_state.video_obj.summary:
+                # Don't generate audio if no OPENAI API key is provided
+                if not os.getenv("OPENAI_API_KEY"):
                     st.warning("No OpenAI API key provided; audio summary generation is disabled.")
-                    st.session_state.audio_path = ""
+                    st.session_state.video_obj.audio = None
                 else:
-                    with st.spinner("The summary is being voiced..."):
+                    with st.spinner("Generating audio summary..."):
                         try:
-                            st.session_state.audio_path = voiceover(st.session_state.summary, st.session_state.openai_api_key)
+                            st.session_state.video_obj.voiceover(os.getenv("OPENAI_API_KEY"))
                         except Exception as e:
-                            match = re.search(r"'message': '([^']*)'", str(e))
-                            error_message = match.group(1) if match else (
-                                "Unknown Error! (Please check whether you are API Key is valid.)")
-                            st.error(error_message)
-                    st.success("Audio summary generated successfully!")
+                            st.error("Error generating audio: " + str(e))
 
-            # Create the vectorstore and retriever only once per URL
+            # Initialize the retriever
             if st.session_state.retriever is None:
                 try:
                     st.session_state.retriever = initialize_vectorstore(st.session_state.video_url)
                 except Exception as e:
-                    match = re.search(r"'message': '([^']*)'", str(e))
-                    error_message = match.group(1) if match else (
-                        "Unknown Error! (Please check whether you are API Key is valid.)")
-                    st.error(error_message)
+                    st.error("Error initializing vectorstore: " + str(e))
 
-        # Display the summary and audio every time the interface reruns.
-        if st.session_state.summary:
+        # Display the generated summary and audio if available.
+        if st.session_state.video_obj is not None and st.session_state.video_obj.summary:
             st.subheader("Video Summary")
-            st.write(st.session_state.summary)
-            if st.session_state.audio_path:
-                st.audio(st.session_state.audio_path, format="audio/mp3")
+            st.write(st.session_state.video_obj.summary)
+            if st.session_state.video_obj.audio:
+                st.audio(st.session_state.video_obj.audio, format="audio/mp3")
 
-            # Chat interface (shown only after summarization)
-            for message in st.session_state.messages:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
+            # Display chat messages from history.
+            for msg in st.session_state.messages:
+                with st.chat_message(msg["role"]):
+                    st.markdown(msg["content"])
 
             # Accept user input for chat.
             if prompt := st.chat_input("Ask your question:"):
-                # Get related docs if available.
-                if st.session_state.retriever is not None:
-                    related_docs = st.session_state.retriever.get_relevant_documents(prompt)
-                    context = "\n\n".join([doc.page_content for doc in related_docs])
-                else:
+                # Retrieve context from vectorstore if available
+                try:
+                    if st.session_state.retriever is not None:
+                        related_docs = st.session_state.retriever.get_relevant_documents(prompt)
+                        context = "\n\n".join([doc.page_content for doc in related_docs])
+                    else:
+                        context = ""
+                except Exception as e:
+                    st.error("Error retrieving context: " + str(e))
                     context = ""
-
                 st.session_state.messages.append({"role": "user", "content": prompt})
                 with st.chat_message("user"):
                     st.markdown(prompt)
-
                 try:
+                    # Append conversation history to the prompt
                     with st.chat_message("assistant"):
-                        response_obj = get_chain(st.session_state.model).invoke(
-                            {"question": prompt, "context": context},
-                            config={"configurables": {"thread_id": "abcd_123"}}
+                        history_str = "\n".join(
+                            [f"{msg['role']}: {msg['content']}" for msg in st.session_state.messages])
+                        response_obj = get_chain(model_instance).invoke(
+                            {"question": prompt, "context": context, "history": history_str}
                         )
                         response_text = response_obj if isinstance(response_obj, str) else response_obj.content
                         st.markdown(response_text)
                     st.session_state.messages.append({"role": "assistant", "content": response_text})
                 except Exception as e:
-                    match = re.search(r"'message': '([^']*)'", str(e))
-                    error_message = match.group(1) if match else "Unknown Error! (Probably no API for the chosen model or the balance is too low for the API Key.)"
-                    st.error(error_message)
-    else:
-        st.error("Please choose a model with an API key.")
+                    st.error("Error in chat response: " + str(e))
