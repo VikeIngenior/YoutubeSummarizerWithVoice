@@ -1,11 +1,11 @@
 from langchain_community.document_loaders import YoutubeLoader
 from langchain_community.document_loaders.youtube import TranscriptFormat
-from typing import List
+from typing import List, Union
 
 # Supported languages for transcript extraction
 available_languages = ['en', 'tr', 'de', 'fr', 'es']
 
-def transcript_from_youtubeloader(url: str) -> List:
+def transcript_from_youtubeloader(url: str) -> Union[List, None]:
     """
     Extracts the transcript from the YouTube URL using YoutubeLoader.
 
@@ -22,8 +22,11 @@ def transcript_from_youtubeloader(url: str) -> List:
         chunk_size_seconds=15,
         language=available_languages
     )
-    docs = loader.load()
-    return docs
+    try:
+        docs = loader.load()
+        return docs
+    except:
+        return None
 
 def transcript_with_whisper():
     pass
