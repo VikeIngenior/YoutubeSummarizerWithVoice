@@ -12,7 +12,7 @@ def is_valid_youtube_url(url):
     youtube_pattern = re.compile(r'(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/.+$')
     return youtube_pattern.match(url)
 
-def streamlit_oop_last():
+def streamlit_interface():
     """
     Streamlit interface for summarizer.
 
