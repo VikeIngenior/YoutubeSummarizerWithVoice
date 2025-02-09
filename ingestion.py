@@ -1,6 +1,5 @@
 from langchain_openai import OpenAIEmbeddings
 from chromadb import PersistentClient
-from transcript import transcript_from_youtubeloader
 from langchain_chroma import Chroma
 from langchain_core.output_parsers import StrOutputParser
 from constants import RAG_CHAIN_PROMPT
