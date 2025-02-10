@@ -21,4 +21,3 @@ Lastly, a simple RAG system (with memory) is integrated using <b>LangChain</b> a
   <li><code>git clone https://github.com/VikeIngenior/YoutubeSummarizerWithVoice.git</code></li>
   <li><code>cd YoutubeSummarizerWithVoice</code></li>
 </ul>
-```git commit```
