@@ -16,8 +16,27 @@ Lastly, a simple RAG system (with memory) is integrated using <b>LangChain</b> a
 </ul>
 
 ## 🛠 Setup
-### Clone the repository
-<ul>
-  <li><code>git clone https://github.com/VikeIngenior/YoutubeSummarizerWithVoice.git</code></li>
-  <li><code>cd YoutubeSummarizerWithVoice</code></li>
-</ul>
+Clone the repository:
+  ```bash
+  git clone https://github.com/VikeIngenior/YoutubeSummarizerWithVoice.git
+  ```
+  ```bash
+  cd YoutubeSummarizerWithVoice
+  ```
+Install dependencies
+  ```bash
+  pip install -r requirements.txt
+  ```
+
+## 🏃 How To Run
+
+  ```bash
+  streamlit run main.py
+  ```
+  or
+  ```bash
+  python -m streamlit run main.py
+  ```
+
+## 🔑 API Keys
+  API Keys will be given on Streamlit after the preferred model is selected.
